@@ -1,16 +1,21 @@
 import re
 from urllib.parse import urlparse
-
+from bs4 import BeautifulSoup
+import re
 class Scraper:
-
+    #static class member discovered set
+    seen_links =  set()
     def __init__(self):
-        self.scraped_urls = []
+
+        self.scraped_urls = {}
     
     def scraper(self, url, resp):
-        links = extract_next_links(url, resp)
+        links = self.extract_next_links(url, resp)
         return [link for link in links if is_valid(link)]
 
     def extract_next_links(url, resp):
+        
+        all_matches = re.findall(r'https?://(www.)?[-a-zA-Z0-9@:%.+~#=]*(.ics.uci.edu/|.cs.uci.edu/|.informatics.uci.edu/|.stat.uci.edu/)\b([-a-zA-Z0-9()@:%+.~#?&//=]*)',encode(resp.raw.response))
         # Implementation required.
         # url: the URL that was used to get the page
         # resp.url: the actual url of the page
@@ -19,8 +24,12 @@ class Scraper:
         # resp.raw_response: this is where the page actually is. More specifically, the raw_response has two parts:
         #         resp.raw_response.url: the url, again
         #         resp.raw_response.content: the content of the page!
+               
+
+
+
         # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
-        return list()
+        return all_matches
 
 def is_valid(url):
     # Decide whether to crawl this url or not. 
