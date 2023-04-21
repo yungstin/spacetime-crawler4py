@@ -7,8 +7,8 @@ class Scraper:
         self.scraped_urls = []
     
     def scraper(self, url, resp):
-        links = extract_next_links(url, resp)
-        return [link for link in links if is_valid(link)]
+        links = self.extract_next_links(url, resp)
+        return [link for link in links if self.is_valid(link)]
 
     def extract_next_links(url, resp):
         # Implementation required.
@@ -20,26 +20,39 @@ class Scraper:
         #         resp.raw_response.url: the url, again
         #         resp.raw_response.content: the content of the page!
         # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
+        
+        '''TODO: FOR EXTRACR_NEXT_LINKS
+        # URL VS RESP.URL -> MOST LIKELY TO CHECK FOR REDIRECTS
+        #FIRST CHECK STATUS OF PAGE
+        #WANT TO GET THE URLS FROM THE RESP TO PARSE AND GET ALL CONNECTED URLS(TURN BYTE INTO STRING AND PARSE)
+        #PUT INTO LIST AND RETURN A VALUE'''
+        
         return list()
 
-def is_valid(url):
-    # Decide whether to crawl this url or not. 
-    # If you decide to crawl it, return True; otherwise return False.
-    # There are already some conditions that return False.
-    try:
-        parsed = urlparse(url)
-        if parsed.scheme not in set(["http", "https"]):
-            return False
-        return not re.match(
-            r".*\.(css|js|bmp|gif|jpe?g|ico"
-            + r"|png|tiff?|mid|mp2|mp3|mp4"
-            + r"|wav|avi|mov|mpeg|ram|m4v|mkv|ogg|ogv|pdf"
-            + r"|ps|eps|tex|ppt|pptx|doc|docx|xls|xlsx|names"
-                + r"|data|dat|exe|bz2|tar|msi|bin|7z|psd|dmg|iso"
-            + r"|epub|dll|cnf|tgz|sha1"
-            + r"|thmx|mso|arff|rtf|jar|csv"
-            + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$", parsed.path.lower())
+    def is_valid(url):
+        # Decide whether to crawl this url or not. 
+        # If you decide to crawl it, return True; otherwise return False.
+        # There are already some conditions that return False.
+        
+        '''#TODO: FOR IS_VALID(URL)
+        #CHECK IF THE WEB IS VALID
+        #IF IT HAS BEEN SEEN ALREADY?, check against a set to see if its already been seen, and it it has return true
+        #*.ics.uci.edu/*,*.cs.uci.edu/*,*.informatics.uci.edu/*,*.stat.uci.edu/*, has to have these domains'''
+        
+        try:
+            parsed = urlparse(url)
+            if parsed.scheme not in set(["http", "https"]):
+                return False
+            return not re.match(
+                r".*\.(css|js|bmp|gif|jpe?g|ico"
+                + r"|png|tiff?|mid|mp2|mp3|mp4"
+                + r"|wav|avi|mov|mpeg|ram|m4v|mkv|ogg|ogv|pdf"
+                + r"|ps|eps|tex|ppt|pptx|doc|docx|xls|xlsx|names"
+                    + r"|data|dat|exe|bz2|tar|msi|bin|7z|psd|dmg|iso"
+                + r"|epub|dll|cnf|tgz|sha1"
+                + r"|thmx|mso|arff|rtf|jar|csv"
+                + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$", parsed.path.lower())
 
-    except TypeError:
-        print ("TypeError for ", parsed)
-        raise
+        except TypeError:
+            print ("TypeError for ", parsed)
+            raise
