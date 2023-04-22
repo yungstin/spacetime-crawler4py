@@ -5,7 +5,7 @@ from threading import Thread, RLock
 from queue import Queue, Empty
 
 from utils import get_logger, get_urlhash, normalize
-from scraper import is_valid
+from scraper import Scraper
 
 class Frontier(object):
     def __init__(self, config, restart):
@@ -40,7 +40,7 @@ class Frontier(object):
         total_count = len(self.save)
         tbd_count = 0
         for url, completed in self.save.values():
-            if not completed and is_valid(url):
+            if not completed and Scraper.is_valid(url):
                 self.to_be_downloaded.append(url)
                 tbd_count += 1
         self.logger.info(
@@ -49,7 +49,7 @@ class Frontier(object):
 
     def get_tbd_url(self):
         try:
-            return self.to_be_downloaded.pop()
+            return self.to_be_downloaded.pop(0)
         except IndexError:
             return None
 
