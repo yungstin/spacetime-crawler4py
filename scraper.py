@@ -58,9 +58,7 @@ class Scraper:
         #         resp.raw_response.url: the url, again
         #         resp.raw_response.content: the content of the page!
         # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
-        #https://www.ics.uci.edu,https://www.cs.uci.edu,https://www.informatics.uci.edu,https://www.stat.uci.edu
         ret_link = []
-        #print(resp.raw_response.text)
         if resp and resp.status == 200:
             soup = BeautifulSoup(resp.raw_response.text, 'html.parser') # soup object    
             for link in soup.find_all('a', href=True):
