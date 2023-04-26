@@ -4,11 +4,12 @@ from urllib.parse import urlparse, urljoin
 
 
 class Scraper:
-    
-    allowed_domains = {"www.ics.uci.edu", "www.cs.uci.edu" ,"www.informatics.uci.edu", "www.stat.uci.edu"}
+    allowed_domains = {"www.ics.uci.edu", "cs.uci.edu", "informatics.uci.edu", "stat.uci.edu"}
     discovered_urls = set()
-    longest_page = tuple() # (page name, length)
+    longest_page = ('', 0) # (page name, length)
     common_words = dict() # {word:times seen}
+    with open("stopwords.txt") as sw_file:
+        stop_words = set(sw_file.readlines())
     @staticmethod
     def is_valid(url):
         # Decide whether to crawl this url or not. 
@@ -62,9 +63,8 @@ class Scraper:
         ret_link = []
         if resp and resp.status == 200:
             soup = BeautifulSoup(resp.raw_response.text, 'html.parser') # soup object
-            # words = re.findall("[a-zA-Z0-9]+", soup.get_text().strip()) #n for each line, iterates through each character
-            # for word in words:                
-                # print("|", word.lower(), "|", sep='')
+            words = re.findall("[a-zA-Z0-9]+", soup.get_text().strip().lower()) # fetches all alphanumeric tokens
+            Scraper.count_words(words, resp.url)
             for link in soup.find_all('a', href=True):
                 new_link = urljoin(resp.url, link.get('href'), allow_fragments=False)
                 if re.match(r"^(www\.).*(ics|cs|informatics|stat)\.uci\.edu$", urlparse(new_link).netloc):
@@ -74,3 +74,22 @@ class Scraper:
                     ret_link.append(new_link)
         return ret_link
 
+    def count_words(words : list[str], url : str) -> None:
+        """
+        Adds word frequencies to the common_words dictionary. Checks if page is the longest seen so far.
+
+        Args:
+            words: a list of alphanumeric strings
+            url: the url of the page being analyzed
+        """
+        wordcount = 0
+        for word in words:           
+            if word not in Scraper.stop_words:
+                wordcount += 1
+                try:
+                    Scraper.common_words[word] += 1 
+                except KeyError:
+                    Scraper.common_words[word] = 1
+                    
+        if wordcount > Scraper.longest_page[1]:
+            Scraper.longest_page = (url, wordcount) 
