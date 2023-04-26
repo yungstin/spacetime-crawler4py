@@ -8,6 +8,8 @@ class Scraper:
     allowed_domains = {"www.ics.uci.edu", "www.cs.uci.edu" ,"www.informatics.uci.edu", "www.stat.uci.edu"}
     discovered_urls = set()
     blacklist = set()
+    longest_page = tuple()
+    common_words = dict()
     @staticmethod
     def is_valid(url):
         # Decide whether to crawl this url or not. 
@@ -60,7 +62,11 @@ class Scraper:
         # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
         ret_link = []
         if resp and resp.status == 200:
-            soup = BeautifulSoup(resp.raw_response.text, 'html.parser') # soup object    
+            soup = BeautifulSoup(resp.raw_response.text, 'html.parser') # soup object
+            words = re.findall("[a-zA-Z0-9]+", soup.get_text().strip()) #n for each line, iterates through each character
+            for word in words:
+                
+                print("|", word.lower(), "|", sep='')
             for link in soup.find_all('a', href=True):
                 new_link = urljoin(resp.url, link.get('href'), allow_fragments=False)
                 if urlparse(new_link).netloc in Scraper.allowed_domains:
