@@ -7,16 +7,15 @@ class Scraper:
     
     allowed_domains = {"www.ics.uci.edu", "www.cs.uci.edu" ,"www.informatics.uci.edu", "www.stat.uci.edu"}
     discovered_urls = set()
-    blacklist = set()
-    longest_page = tuple()
-    common_words = dict()
+    longest_page = tuple() # (page name, length)
+    common_words = dict() # {word:times seen}
     @staticmethod
     def is_valid(url):
         # Decide whether to crawl this url or not. 
         # If you decide to crawl it, return True; otherwise return False.
         # There are already some conditions that return False.
         try:
-            if url not in Scraper.discovered_urls and url not in Scraper.blacklist:
+            if url not in Scraper.discovered_urls and url:
                 try:
                     parsed = urlparse(url)
                     if parsed.scheme not in set(["http", "https"]):
@@ -63,18 +62,15 @@ class Scraper:
         ret_link = []
         if resp and resp.status == 200:
             soup = BeautifulSoup(resp.raw_response.text, 'html.parser') # soup object
-            words = re.findall("[a-zA-Z0-9]+", soup.get_text().strip()) #n for each line, iterates through each character
-            for word in words:
-                
-                print("|", word.lower(), "|", sep='')
+            # words = re.findall("[a-zA-Z0-9]+", soup.get_text().strip()) #n for each line, iterates through each character
+            # for word in words:                
+                # print("|", word.lower(), "|", sep='')
             for link in soup.find_all('a', href=True):
                 new_link = urljoin(resp.url, link.get('href'), allow_fragments=False)
-                if urlparse(new_link).netloc in Scraper.allowed_domains:
+                if re.match(r"^(www\.).*(ics|cs|informatics|stat)\.uci\.edu$", urlparse(new_link).netloc):
                     pound_ind = new_link.find('#')
                     if pound_ind != -1:
                         new_link = new_link[:pound_ind]
                     ret_link.append(new_link)
-                    
-
         return ret_link
 
