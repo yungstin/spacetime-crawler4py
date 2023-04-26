@@ -18,7 +18,23 @@ class Worker(Thread):
         assert {getsource(scraper).find(req) for req in {"from urllib.request import", "import urllib.request"}} == {-1}, "Do not use urllib.request in scraper.py"
         super().__init__(daemon=True)
         
+    def write_report(self) -> None:
+        with open('report.txt','w') as report:
+            report.write(f"Unique webpages: {len(scraper.Scraper.discovered_urls)}\n")
+            report.write(f"longest page : {scraper.Scraper.longest_page[0]}, length of page: {scraper.Scraper.longest_page[1]}\n")
+            sorted_common_words = sorted(scraper.Scraper.common_words.items(), key = lambda x : (-x[1], x[0]))
+            for index in range(0, 50):
+                report.write(f'Common Words: {sorted_common_words[index][0]}, Frequency: {sorted_common_words[index][1]}\n')
+            sorted_subdomains = sorted(scraper.Scraper.subdomain_frequency.keys())
+            report.write(f"Unique subdomains: {len(sorted_subdomains)}\n")
+            report.write("Subdomains and frequencies:\n")
+            for subdomain in sorted_subdomains:
+                report.write(f'{subdomain}, {scraper.Scraper.subdomain_frequency[subdomain]}\n')
+               
+        
+        
     def run(self):
+        test_counter = 0 # TEMP
         while True:
             tbd_url = self.frontier.get_tbd_url()
             print('next seed: ', tbd_url)
@@ -35,3 +51,8 @@ class Worker(Thread):
                 self.frontier.add_url(scraped_url)
             self.frontier.mark_url_complete(tbd_url)
             time.sleep(self.config.time_delay)
+            test_counter += 1 # TEMP
+            if test_counter >= 20:
+                break
+        self.write_report()
+            

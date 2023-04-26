@@ -9,9 +9,9 @@ class Scraper:
     longest_page = ('', 0) # (page name, length)
     common_words = dict() # {word:times seen}
     with open("stopwords.txt") as sw_file:
-        stop_words = set(sw_file.readlines())
+        stop_words = {line.strip() for line in sw_file}
     @staticmethod
-    def is_valid(url):
+    def is_valid(url):  
         # Decide whether to crawl this url or not. 
         # If you decide to crawl it, return True; otherwise return False.
         # There are already some conditions that return False.
@@ -75,8 +75,6 @@ class Scraper:
                 if pound_ind != -1:
                     new_link = new_link[:pound_ind]
                 ret_link.append(new_link)
-        print(Scraper.longest_page)
-        print('subdomain',Scraper.subdomain_frequency)
         return ret_link
 
     def count_words(words : list[str], url : str) -> None:
