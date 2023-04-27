@@ -136,7 +136,7 @@ def get_fingerprint(words : list[str]) -> set[int]:
         three_grams.append(words[i:i+3])
         
     for gram in three_grams:
-        gram_hash = hash(gram)
+        gram_hash = hash(tuple(gram))
         if gram_hash % 4 == 0:
             fingerprint.add(gram_hash)
     return fingerprint
