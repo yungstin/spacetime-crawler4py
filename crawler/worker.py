@@ -34,7 +34,6 @@ class Worker(Thread):
         
         
     def run(self):
-        test_counter = 0 # TEMP
         while True:
             tbd_url = self.frontier.get_tbd_url()
             print('next seed: ', tbd_url)
@@ -51,8 +50,5 @@ class Worker(Thread):
                 self.frontier.add_url(scraped_url)
             self.frontier.mark_url_complete(tbd_url)
             time.sleep(self.config.time_delay)
-            test_counter += 1 # TEMP
-            if test_counter >= 20:
-                break
         self.write_report()
             

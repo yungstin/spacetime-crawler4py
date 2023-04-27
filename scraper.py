@@ -72,8 +72,9 @@ class Scraper:
             words = re.findall("[a-zA-Z0-9]+", soup.get_text().strip().lower()) # fetches all alphanumeric tokens
             Scraper.count_words(words, resp.url)
             current_fingerprint = get_fingerprint(words)
+            Scraper.fingerprints.append(current_fingerprint)
             current_wordcount = Scraper.count_words(words, resp.url)
-            if current_wordcount >= 100: # checking for information value
+            if current_wordcount >= 100 and not Scraper.is_trap(current_fingerprint): # checking for information value
                 for link in soup.find_all('a', href=True):
                     new_link = urljoin(resp.url, link.get('href'), allow_fragments=False)
                     pound_ind = new_link.find('#')
@@ -103,7 +104,7 @@ class Scraper:
             Scraper.longest_page = (url, wordcount) 
         return wordcount
     
-    def check_traps(fingerprint : set[int]) -> bool:
+    def is_trap(fingerprint : set[int]) -> bool:
         '''
         Checks how many times fingerprint has been repeated. If past a threshold, returns True.
 
