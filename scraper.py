@@ -4,12 +4,14 @@ from urllib.parse import urlparse, urljoin
 
 
 class Scraper:
+    fingerprints = []  # List of fingerprints, which are sets of hashes
     discovered_urls = set()
     subdomain_frequency = dict()
     longest_page = ('', 0) # (page name, length)
     common_words = dict() # {word:times seen}
     with open("stopwords.txt") as sw_file:
         stop_words = {line.strip() for line in sw_file}
+
     @staticmethod
     def is_valid(url):  
         # Decide whether to crawl this url or not. 
@@ -95,4 +97,58 @@ class Scraper:
                     Scraper.common_words[word] = 1
                     
         if wordcount > Scraper.longest_page[1]:
-            Scraper.longest_page = (url, wordcount) 
+            Scraper.longest_page = (url, wordcount)
+    
+    def check_traps(fingerprint : set[int]) -> bool:
+        '''
+        Checks how many times fingerprint has been repeated. If past a threshold, returns True.
+
+        Args:
+            fingerprint (set[int]): Representative three-gram hashes of current page.
+        Returns:
+            True if fingerprint has been repeated too many times.
+        '''
+        if len(Scraper.fingerprints) >= 10:
+            for i in range(10):
+                if not is_similar(fingerprint, Scraper.fingerprints[-1-i]):
+                    return False
+            return True
+        else:
+            return False
+
+def get_fingerprint(words : list[str]) -> set[int]:
+    '''
+    Returns a set of three-gram hashes to represent a site.
+    
+    Args:
+        words (list[str]): A list of alphanumeric tokens.
+    Returns:
+        fingerprint (set[int]): A set of three-gram hashes
+    '''
+    fingerprint = set()
+    three_grams = []
+    for i in range(len(words) - 4):
+        three_grams.append(words[i:i+3])
+        
+    for gram in three_grams:
+        gram_hash = hash(gram)
+        if gram_hash % 4 == 0:
+            fingerprint.add(gram_hash)
+    return fingerprint
+
+def is_similar(fingerprints_l : set[int], fingerprints_r : set[int]) -> bool:
+    '''
+    Returns true if 90% of two sets is similar.
+    
+    Args:
+        fingerprints_l/r set[int]: sets of three-gram hashes to be compared.
+    Returns:
+        True if 90% of the elements are shared.
+    '''
+    fp_intersection = fingerprints_l.intersection(fingerprints_r)
+    fp_union = fingerprints_l.union(fingerprints_r)
+    if fp_union:
+        return (len(fp_intersection) / len(fp_union)) >= .9
+    return False
+    
+    
