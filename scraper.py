@@ -63,7 +63,7 @@ class Scraper:
         # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
         ret_link = []
         if resp and resp.status == 200:
-            if (resp.url.find("ics.uci.edu") != -1 and not resp.url.find("informatics.uci.edu") != -1) and not re.match(r"^.*(www\.)(ics)\.uci\.edu.*", resp.url):
+            if (resp.url.find("ics.uci.edu") != -1 and resp.url.find("informatics.uci.edu") == -1) and not re.match(r"^.*(www\.)(ics)\.uci\.edu.*", resp.url):
                 try:
                     Scraper.subdomain_frequency[resp.url] += 1
                 except KeyError:
@@ -71,15 +71,18 @@ class Scraper:
             soup = BeautifulSoup(resp.raw_response.text, 'html.parser') # soup object
             words = re.findall("[a-zA-Z0-9]+", soup.get_text().strip().lower()) # fetches all alphanumeric tokens
             Scraper.count_words(words, resp.url)
-            for link in soup.find_all('a', href=True):
-                new_link = urljoin(resp.url, link.get('href'), allow_fragments=False)
-                pound_ind = new_link.find('#')
-                if pound_ind != -1:
-                    new_link = new_link[:pound_ind]
-                ret_link.append(new_link)
+            current_fingerprint = get_fingerprint(words)
+            current_wordcount = Scraper.count_words(words, resp.url)
+            if current_wordcount >= 100: # checking for information value
+                for link in soup.find_all('a', href=True):
+                    new_link = urljoin(resp.url, link.get('href'), allow_fragments=False)
+                    pound_ind = new_link.find('#')
+                    if pound_ind != -1:
+                        new_link = new_link[:pound_ind]
+                    ret_link.append(new_link)
         return ret_link
 
-    def count_words(words : list[str], url : str) -> None:
+    def count_words(words : list[str], url : str) -> int:
         """
         Adds word frequencies to the common_words dictionary. Checks if page is the longest seen so far.
 
@@ -97,7 +100,8 @@ class Scraper:
                     Scraper.common_words[word] = 1
                     
         if wordcount > Scraper.longest_page[1]:
-            Scraper.longest_page = (url, wordcount)
+            Scraper.longest_page = (url, wordcount) 
+        return wordcount
     
     def check_traps(fingerprint : set[int]) -> bool:
         '''
