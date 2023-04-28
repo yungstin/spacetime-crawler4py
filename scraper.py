@@ -77,7 +77,7 @@ class Scraper:
             if current_wordcount >= 100 and not Scraper.is_trap(current_fingerprint): # checking for information value
                 for link in soup.find_all('a', href=True):
                     unjoined_link = link.get('href')
-                    if unjoined_link and unjoined_link.find('mailto:') == -1 and unjoined_link.find('tel:') == -1:
+                    if unjoined_link and not any(word in unjoined_link for word in {"mailto:", "tel:", "javascript:"}):
                         new_link = get_absolute_url(unjoined_link, resp.url)
                         pound_ind = new_link.find('#')
                         if pound_ind != -1:
