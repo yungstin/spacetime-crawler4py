@@ -76,21 +76,23 @@ class Scraper:
             current_wordcount = Scraper.count_words(words, resp.url)
             if current_wordcount >= 100 and not Scraper.is_trap(current_fingerprint): # checking for information value
                 for link in soup.find_all('a', href=True):
-                    new_link = urljoin(resp.url, link.get('href'), allow_fragments=False)
-                    pound_ind = new_link.find('#')
-                    if pound_ind != -1:
-                        new_link = new_link[:pound_ind]
-                    ret_link.append(new_link)
+                    unjoined_link = link.get('href')
+                    if unjoined_link and unjoined_link.find('mailto:') == -1 and unjoined_link.find('tel:') == -1:
+                        new_link = get_absolute_url(unjoined_link, resp.url)
+                        pound_ind = new_link.find('#')
+                        if pound_ind != -1:
+                            new_link = new_link[:pound_ind]
+                        ret_link.append(new_link)
         return ret_link
 
     def count_words(words : list[str], url : str) -> int:
-        """
+        '''
         Adds word frequencies to the common_words dictionary. Checks if page is the longest seen so far.
 
         Args:
             words: a list of alphanumeric strings
             url: the url of the page being analyzed
-        """
+        '''
         wordcount = 0
         for word in words:           
             if word not in Scraper.stop_words:
@@ -157,3 +159,19 @@ def is_similar(fingerprints_l : set[int], fingerprints_r : set[int]) -> bool:
     return False
     
     
+def get_absolute_url(new_url : str, origin : str):
+    '''
+    If new_url is relative, returns an absolute url. Otherwise, returns new_url.
+
+    Args:
+        new_url (str): A url to conver to absolute.
+        origin (str): Where new_url was retrieved.
+    Returns:
+        abs_url (str): An absolute url.
+    '''
+    if new_url.find('//') == -1:
+        if new_url[0] != '/':
+            new_url = '/' + new_url
+        return urljoin(origin, new_url, allow_fragments=False)
+    else:
+        return new_url
