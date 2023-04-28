@@ -64,10 +64,11 @@ class Scraper:
         ret_link = []
         if resp and resp.status == 200:
             if re.match(r".*(www).*(\.ics)\.uci\.edu.*", resp.url) and not re.match(r"^.*(www\.)(ics)\.uci\.edu.*", resp.url):
+                parsed_subdomain = urlparse(resp.url)
                 try:
-                    Scraper.subdomain_frequency[resp.url] += 1
+                    Scraper.subdomain_frequency[parsed_subdomain.netloc] += 1
                 except KeyError:
-                    Scraper.subdomain_frequency[resp.url] = 1
+                    Scraper.subdomain_frequency[parsed_subdomain.netloc] = 1
             soup = BeautifulSoup(resp.raw_response.text, 'html.parser') # soup object
             words = re.findall("[a-zA-Z0-9]+", soup.get_text().strip().lower()) # fetches all alphanumeric tokens
             Scraper.count_words(words, resp.url)
