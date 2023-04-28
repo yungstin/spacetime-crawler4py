@@ -31,7 +31,7 @@ class Scraper:
                     + r"|epub|dll|cnf|tgz|sha1"
                     + r"|thmx|mso|arff|rtf|jar|csv"
                     + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$", parsed.path.lower()) \
-                    and re.match(r"^(www\.).*(ics|cs|informatics|stat)\.uci\.edu$", parsed.netloc)
+                    and re.match(r"^(www).*(\.ics|\.cs|\.informatics|\.stat)\.uci\.edu$", parsed.netloc)
 
             except TypeError:
                 print ("TypeError for ", parsed)
@@ -63,7 +63,7 @@ class Scraper:
         # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
         ret_link = []
         if resp and resp.status == 200:
-            if (resp.url.find("ics.uci.edu") != -1 and resp.url.find("informatics.uci.edu") == -1) and not re.match(r"^.*(www\.)(ics)\.uci\.edu.*", resp.url):
+            if re.match(r".*(www).*(\.ics)\.uci\.edu.*", resp.url) and not re.match(r"^.*(www\.)(ics)\.uci\.edu.*", resp.url):
                 try:
                     Scraper.subdomain_frequency[resp.url] += 1
                 except KeyError:
