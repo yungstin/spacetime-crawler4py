@@ -62,7 +62,7 @@ class Scraper:
         #         resp.raw_response.content: the content of the page!
         # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
         ret_link = []
-        if resp and resp.status == 200:
+        if resp and resp.raw_response and resp.status == 200:
             if re.match(r".*(www).*(\.ics)\.uci\.edu.*", resp.url) and not re.match(r"^.*(www\.)(ics)\.uci\.edu.*", resp.url):
                 parsed_subdomain = urlparse(resp.url)
                 try:
@@ -116,8 +116,8 @@ class Scraper:
         Returns:
             True if fingerprint has been repeated too many times.
         '''
-        if len(Scraper.fingerprints) >= 10:
-            for i in range(10):
+        if len(Scraper.fingerprints) >= 3:
+            for i in range(3):
                 if not is_similar(fingerprint, Scraper.fingerprints[-1-i]):
                     return False
             return True
@@ -156,7 +156,7 @@ def is_similar(fingerprints_l : set[int], fingerprints_r : set[int]) -> bool:
     fp_intersection = fingerprints_l.intersection(fingerprints_r)
     fp_union = fingerprints_l.union(fingerprints_r)
     if fp_union:
-        return (len(fp_intersection) / len(fp_union)) >= .9
+        return (len(fp_intersection) / len(fp_union)) >= .75
     return False
     
     
@@ -171,8 +171,11 @@ def get_absolute_url(new_url : str, origin : str):
         abs_url (str): An absolute url.
     '''
     if new_url.find('//') == -1:
-        if new_url[0] != '/':
-            new_url = '/' + new_url
+        parsed_origin = urlparse(origin)
+        if parsed_origin.path.find('.') == -1:
+            origin += '/'
+        #if new_url[0] != '/':
+        #    new_url = '/' + new_url
         return urljoin(origin, new_url, allow_fragments=False)
     else:
         return new_url
