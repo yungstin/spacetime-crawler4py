@@ -1,9 +1,10 @@
 import re
 from bs4 import BeautifulSoup
-from urllib.parse import urlparse, urljoin
+from urllib.parse import urlparse, urljoin, urldefrag
 
 
 class Scraper:
+    blacklist = {"~kay/computer.law", "mailto:", "tel:", "javascript:", "index.php", "doku.php", "~pfbaldi/download"}
     fingerprints = []  # List of fingerprints, which are sets of hashes
     discovered_urls = set()
     subdomain_frequency = dict()
@@ -30,7 +31,7 @@ class Scraper:
                     + r"|data|dat|exe|bz2|tar|msi|bin|7z|psd|dmg|iso"
                     + r"|epub|dll|cnf|tgz|sha1"
                     + r"|thmx|mso|arff|rtf|jar|csv"
-                    + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$", parsed.path.lower()) \
+                    + r"|rm|smil|wmv|swf|wma|zip|rar|gz|ova|war|img|apk|java|py|json)$", parsed.path.lower()) \
                     and re.match(r"^(www).*(\.ics|\.cs|\.informatics|\.stat)\.uci\.edu$", parsed.netloc)
 
             except TypeError:
@@ -73,16 +74,16 @@ class Scraper:
             words = re.findall("[a-zA-Z0-9]+", soup.get_text().strip().lower()) # fetches all alphanumeric tokens
             Scraper.count_words(words, resp.url)
             current_fingerprint = get_fingerprint(words)
-            Scraper.fingerprints.append(current_fingerprint)
             current_wordcount = Scraper.count_words(words, resp.url)
             if current_wordcount >= 100 and not Scraper.is_trap(current_fingerprint): # checking for information value
+                Scraper.fingerprints.append(current_fingerprint)
                 for link in soup.find_all('a', href=True):
-                    unjoined_link = link.get('href')
-                    if unjoined_link and not any(word in unjoined_link for word in {"mailto:", "tel:", "javascript:"}):
+                    unjoined_link = urldefrag(link.get('href'))[0]
+                    if unjoined_link and not any(word in unjoined_link for word in Scraper.blacklist):
                         new_link = get_absolute_url(unjoined_link, resp.url)
-                        pound_ind = new_link.find('#')
-                        if pound_ind != -1:
-                            new_link = new_link[:pound_ind]
+                        #pound_ind = new_link.find('#')
+                        #if pound_ind != -1:
+                        #    new_link = new_link[:pound_ind]
                         ret_link.append(new_link)
         return ret_link
 
@@ -109,20 +110,19 @@ class Scraper:
     
     def is_trap(fingerprint : set[int]) -> bool:
         '''
-        Checks how many times fingerprint has been repeated. If past a threshold, returns True.
+        Checks if fingerprint has been seen in past 10 urls.
 
         Args:
             fingerprint (set[int]): Representative three-gram hashes of current page.
         Returns:
             True if fingerprint has been repeated too many times.
         '''
-        if len(Scraper.fingerprints) >= 3:
-            for i in range(3):
-                if not is_similar(fingerprint, Scraper.fingerprints[-1-i]):
-                    return False
-            return True
-        else:
-            return False
+        if len(Scraper.fingerprints) >= 10:
+            for i in range(10):
+                if is_similar(fingerprint, Scraper.fingerprints[-1-i]):
+                    print("Found trap!")
+                    return True
+        return False
 
 def get_fingerprint(words : list[str]) -> set[int]:
     '''
@@ -146,7 +146,7 @@ def get_fingerprint(words : list[str]) -> set[int]:
 
 def is_similar(fingerprints_l : set[int], fingerprints_r : set[int]) -> bool:
     '''
-    Returns true if 90% of two sets is similar.
+    Returns true if 90% of two sets is equal.
     
     Args:
         fingerprints_l/r set[int]: sets of three-gram hashes to be compared.
@@ -156,7 +156,7 @@ def is_similar(fingerprints_l : set[int], fingerprints_r : set[int]) -> bool:
     fp_intersection = fingerprints_l.intersection(fingerprints_r)
     fp_union = fingerprints_l.union(fingerprints_r)
     if fp_union:
-        return (len(fp_intersection) / len(fp_union)) >= .75
+        return (len(fp_intersection) / len(fp_union)) >= .9
     return False
     
     
@@ -174,8 +174,6 @@ def get_absolute_url(new_url : str, origin : str):
         parsed_origin = urlparse(origin)
         if parsed_origin.path.find('.') == -1:
             origin += '/'
-        #if new_url[0] != '/':
-        #    new_url = '/' + new_url
         return urljoin(origin, new_url, allow_fragments=False)
     else:
         return new_url
