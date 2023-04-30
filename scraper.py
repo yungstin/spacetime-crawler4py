@@ -4,7 +4,7 @@ from urllib.parse import urlparse, urljoin, urldefrag
 
 
 class Scraper:
-    blacklist = {"~kay/computer.law", "mailto:", "tel:", "javascript:", "index.php", "doku.php", "~pfbaldi/download"}
+    blacklist = {"~kay/computer.law", "mailto:", "tel:", "javascript:", "doku.php", "~pfbaldi/download"}
     fingerprints = []  # List of fingerprints, which are sets of hashes
     discovered_urls = set()
     subdomain_frequency = dict()
@@ -31,7 +31,7 @@ class Scraper:
                     + r"|data|dat|exe|bz2|tar|msi|bin|7z|psd|dmg|iso"
                     + r"|epub|dll|cnf|tgz|sha1"
                     + r"|thmx|mso|arff|rtf|jar|csv"
-                    + r"|rm|smil|wmv|swf|wma|zip|rar|gz|ova|war|img|apk|java|py|json)$", parsed.path.lower()) \
+                    + r"|rm|smil|wmv|swf|wma|zip|rar|gz|ova|war|img|apk|java|py|json|db)$", parsed.path.lower()) \
                     and re.match(r"^(www).*(\.ics|\.cs|\.informatics|\.stat)\.uci\.edu$", parsed.netloc)
 
             except TypeError:
@@ -46,7 +46,6 @@ class Scraper:
         to_frontier_list = []
         links = self.extract_next_links(url, resp) #list of possilbe url paths
         for link in links:
-
             if self.is_valid(link):
                 Scraper.discovered_urls.add(link)
                 to_frontier_list.append(link)
@@ -81,9 +80,6 @@ class Scraper:
                     unjoined_link = urldefrag(link.get('href'))[0]
                     if unjoined_link and not any(word in unjoined_link for word in Scraper.blacklist):
                         new_link = get_absolute_url(unjoined_link, resp.url)
-                        #pound_ind = new_link.find('#')
-                        #if pound_ind != -1:
-                        #    new_link = new_link[:pound_ind]
                         ret_link.append(new_link)
         return ret_link
 
@@ -120,7 +116,6 @@ class Scraper:
         if len(Scraper.fingerprints) >= 10:
             for i in range(10):
                 if is_similar(fingerprint, Scraper.fingerprints[-1-i]):
-                    print("Found trap!")
                     return True
         return False
 
