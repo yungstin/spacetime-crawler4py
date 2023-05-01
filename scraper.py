@@ -31,7 +31,7 @@ class Scraper:
                     + r"|data|dat|exe|bz2|tar|msi|bin|7z|psd|dmg|iso"
                     + r"|epub|dll|cnf|tgz|sha1"
                     + r"|thmx|mso|arff|rtf|jar|csv"
-                    + r"|rm|smil|wmv|swf|wma|zip|rar|gz|ova|war|img|apk|java|py|json|db)$", parsed.path.lower()) \
+                    + r"|rm|smil|wmv|swf|wma|zip|rar|gz|ova|war|img|apk|java|py|json|db|txt)$", parsed.path.lower()) \
                     and re.match(r"^(www).*(\.ics|\.cs|\.informatics|\.stat)\.uci\.edu$", parsed.netloc)
 
             except TypeError:
